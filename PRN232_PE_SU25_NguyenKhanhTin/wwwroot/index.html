@@ -1,0 +1,392 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --surface: rgba(29,31,38,.55);
+            --primary: #00ffff;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --border: rgba(255,255,255,.08);
+            --shadow: rgba(0,255,255,.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: Poppins,system-ui,Arial;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            background-image: radial-gradient(1200px 600px at 5% 5%,rgba(0,255,255,.15),transparent);
+        }
+
+        .container {
+            max-width: 980px;
+            margin: auto
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 18px;
+            font-weight: 600
+        }
+
+            h1 span {
+                color: var(--primary);
+                font-weight: 300
+            }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 14px
+        }
+
+        input, select, textarea, button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: .2s;
+            backdrop-filter: blur(6px);
+        }
+
+            input:focus, select:focus, textarea:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 12px var(--shadow)
+            }
+
+        #search {
+            flex: 1;
+            min-width: 240px
+        }
+
+        button {
+            cursor: pointer;
+            border-color: var(--primary);
+            color: var(--primary);
+            background: transparent;
+            font-weight: 600
+        }
+
+            button:hover {
+                background: var(--primary);
+                color: #0b0e11;
+                box-shadow: 0 0 16px var(--shadow)
+            }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin: 14px 0;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            backdrop-filter: blur(10px)
+        }
+
+        .thumb {
+            width: 120px;
+            height: 80px;
+            border-radius: 10px;
+            border: 1px solid #1f2937;
+            object-fit: cover;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .grow {
+            flex: 1
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .form {
+            background: var(--surface);
+            border: 1px dashed #2b3340;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none
+        }
+
+            .form.show {
+                display: block
+            }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px
+        }
+
+        .mini {
+            padding: 6px 10px;
+            font-size: 12px
+        }
+
+        #toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50
+        }
+
+        .toast {
+            background: var(--surface);
+            border-left: 4px solid var(--primary);
+            padding: 10px 12px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,.4)
+        }
+
+        .empty {
+            border: 1px dashed #334155;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            color: var(--muted)
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Post <span>Management</span></h1>
+
+        <div class="toolbar">
+            <input id="search" placeholder="Search by name…" />
+            <select id="sort">
+                <option value="asc">Sort: A → Z</option>
+                <option value="desc">Sort: Z → A</option>
+            </select>
+            <button id="apply">Apply</button>
+            <button id="toggleForm">Add New Post</button>
+        </div>
+
+        <!-- Add / Edit form -->
+        <div id="form" class="form">
+            <h3 id="formTitle" style="margin-bottom:10px;color:var(--primary)">Add Post</h3>
+            <input type="hidden" id="postId" />
+            <div class="row">
+                <input id="name" placeholder="Name *" style="flex:1" required />
+                <input id="imageUrl" placeholder="Image URL (optional)" style="flex:1" />
+            </div>
+            <p></p>
+            <textarea id="description" rows="4" placeholder="Description *" style="width:100%" required></textarea>
+            <div class="actions">
+                <button id="save">Save</button>
+                <button id="cancel" type="button">Cancel</button>
+            </div>
+            <p class="muted" style="margin-top:6px">(*) Required</p>
+        </div>
+
+        <!-- List -->
+        <div id="list"></div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        (() => {
+            // === CONFIG ===
+            const api = '/api/Posts'; // đổi nếu route khác
+
+            // === ELEMENTS ===
+            const list = document.getElementById('list');
+            const search = document.getElementById('search');
+            const sort = document.getElementById('sort');
+            const applyBtn = document.getElementById('apply');
+            const form = document.getElementById('form');
+            const formTitle = document.getElementById('formTitle');
+            const toggleFormBtn = document.getElementById('toggleForm');
+            const saveBtn = document.getElementById('save');
+            const cancelBtn = document.getElementById('cancel');
+            const postId = document.getElementById('postId');
+            const nameEl = document.getElementById('name');
+            const descEl = document.getElementById('description');
+            const imgEl = document.getElementById('imageUrl');
+
+            let cache = []; // giữ dữ liệu hiện tại để filter nhanh
+
+            // === TOAST ===
+            const toast = (msg) => {
+                const box = document.getElementById('toast');
+                const t = document.createElement('div');
+                t.className = 'toast';
+                t.textContent = msg;
+                box.appendChild(t);
+                setTimeout(() => t.remove(), 3500);
+            };
+
+            // === LOAD LIST ===
+            async function load() {
+                const url = `${api}?search=${encodeURIComponent(search.value.trim())}&sort=${encodeURIComponent(sort.value)}`;
+                const res = await fetch(url);
+                if (!res.ok) { toast('Failed to load posts'); return; }
+                cache = await res.json();
+                render(cache);
+            }
+
+            function render(items) {
+                list.innerHTML = '';
+                if (items.length === 0) {
+                    list.innerHTML = `<div class="empty">No posts found.</div>`;
+                    return;
+                }
+                items.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    const thumb = document.createElement(p.imageUrl ? 'img' : 'div');
+                    if (p.imageUrl) {
+                        thumb.src = p.imageUrl;
+                        thumb.alt = p.name;
+                        thumb.className = 'thumb';
+                    } else {
+                        thumb.className = 'thumb'; thumb.textContent = 'No image';
+                    }
+
+                    const body = document.createElement('div');
+                    body.className = 'grow';
+                    body.innerHTML = `
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <h3 style="margin:0">${escapeHtml(p.name)}</h3>
+              <span class="muted">${new Date(p.createdAt ?? Date.now()).toLocaleString()}</span>
+            </div>
+            <p style="margin:6px 0 10px 0">${escapeHtml(p.description)}</p>
+          `;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'actions';
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'mini';
+                    editBtn.textContent = 'Edit';
+                    editBtn.onclick = () => edit(p.id);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'mini';
+                    delBtn.textContent = 'Delete';
+                    delBtn.onclick = () => remove(p.id);
+
+                    actions.append(editBtn, delBtn);
+                    body.appendChild(actions);
+
+                    card.append(thumb, body);
+                    list.appendChild(card);
+                });
+            }
+
+            // === FORM ===
+            function showForm(edit = false, data = null) {
+                form.classList.add('show');
+                formTitle.textContent = edit ? 'Edit Post' : 'Add Post';
+                if (edit && data) {
+                    postId.value = data.id;
+                    nameEl.value = data.name;
+                    descEl.value = data.description;
+                    imgEl.value = data.imageUrl ?? '';
+                } else {
+                    postId.value = '';
+                    nameEl.value = '';
+                    descEl.value = '';
+                    imgEl.value = '';
+                }
+                nameEl.focus();
+            }
+            function hideForm() { form.classList.remove('show'); }
+
+            toggleFormBtn.onclick = () => showForm(false);
+            cancelBtn.onclick = hideForm;
+
+            saveBtn.onclick = async () => {
+                const payload = {
+                    name: nameEl.value.trim(),
+                    description: descEl.value.trim(),
+                    imageUrl: imgEl.value.trim()
+                };
+                if (!payload.name || !payload.description) {
+                    toast('Name & Description are required.'); return;
+                }
+                if (postId.value) { // update
+                    const res = await fetch(`${api}/${postId.value}`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: +postId.value, ...payload })
+                    });
+                    if (!res.ok) { toast('Update failed'); return; }
+                    toast('Updated'); hideForm(); load();
+                } else { // create
+                    const res = await fetch(api, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) { toast('Create failed'); return; }
+                    toast('Created'); hideForm(); load();
+                }
+            };
+
+            async function edit(id) {
+                const r = await fetch(`${api}/${id}`);
+                if (!r.ok) { toast('Cannot load post'); return; }
+                const p = await r.json();
+                showForm(true, p);
+            }
+
+            async function remove(id) {
+                if (!confirm('Delete this post?')) return;
+                const r = await fetch(`${api}/${id}`, { method: 'DELETE' });
+                if (r.status !== 204) { toast('Delete failed'); return; }
+                toast('Deleted'); load();
+            }
+
+            // client-side quick search (không bắt buộc; đề yêu cầu search theo API đã có)
+            document.getElementById('apply').onclick = load;
+
+            // XSS-safe text
+            function escapeHtml(s) {
+                return (s ?? '').toString()
+                    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#039;');
+            }
+
+            // Initial
+            load();
+        })();
+    </script>
+</body>
+</html>
