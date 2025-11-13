@@ -9,13 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f1115;
-            --surface: rgba(29,31,38,.55);
-            --primary: #00ffff;
-            --text: #e5e7eb;
-            --muted: #9ca3af;
-            --border: rgba(255,255,255,.08);
-            --shadow: rgba(0,255,255,.4);
+            /* Bảng màu sáng mới */
+            --bg: #f9fafb; /* Màu nền xám rất nhạt (Tailwind gray-50) */
+            --surface: #ffffff; /* Màu nền cho card, input (trắng) */
+            --primary: #007bff; /* Màu nhấn chính (xanh dương chuyên nghiệp) */
+            --text: #1f2937; /* Màu chữ chính (xám đen) */
+            --muted: #6b7280; /* Màu chữ phụ (xám vừa) */
+            --border: #e5e7eb; /* Màu viền (xám nhạt) */
+            --shadow: rgba(0,123,255,.25); /* Màu bóng mờ khi focus */
         }
 
         * {
@@ -29,7 +30,8 @@
             background: var(--bg);
             color: var(--text);
             padding: 24px;
-            background-image: radial-gradient(1200px 600px at 5% 5%,rgba(0,255,255,.15),transparent);
+            /* Cập nhật gradient nền cho phù hợp với màu primary mới */
+            background-image: radial-gradient(1200px 600px at 5% 5%,rgba(0,123,255,.1),transparent);
         }
 
         .container {
@@ -57,14 +59,14 @@
         }
 
         input, select, textarea, button {
-            background: var(--surface);
-            color: var(--text);
+            background: var(--surface); /* Nền trắng */
+            color: var(--text); /* Chữ đen */
             border: 1px solid var(--border);
             padding: 10px 12px;
             border-radius: 10px;
             font-size: 14px;
             transition: .2s;
-            backdrop-filter: blur(6px);
+            /* Bỏ backdrop-filter vì không cần thiết trên nền đặc */
         }
 
             input:focus, select:focus, textarea:focus {
@@ -88,7 +90,7 @@
 
             button:hover {
                 background: var(--primary);
-                color: #0b0e11;
+                color: #ffffff; /* Chữ trắng khi hover */
                 box-shadow: 0 0 16px var(--shadow)
             }
 
@@ -101,16 +103,17 @@
             display: flex;
             gap: 14px;
             align-items: flex-start;
-            backdrop-filter: blur(10px)
+            /* Thêm shadow nhẹ để card nổi bật trên nền sáng */
+            box-shadow: 0 4px 12px rgba(0,0,0,.05);
         }
 
         .thumb {
             width: 120px;
             height: 80px;
             border-radius: 10px;
-            border: 1px solid #1f2937;
+            border: 1px solid var(--border); /* Viền xám nhạt */
             object-fit: cover;
-            background: #111827;
+            background: #f1f3f5; /* Nền placeholder xám nhạt */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -135,11 +138,13 @@
 
         .form {
             background: var(--surface);
-            border: 1px dashed #2b3340;
+            border: 1px dashed #adb5bd; /* Viền dashed xám vừa */
             border-radius: 14px;
             padding: 16px;
             margin-top: 16px;
-            display: none
+            display: none;
+            /* Thêm shadow giống card */
+            box-shadow: 0 4px 12px rgba(0,0,0,.05);
         }
 
             .form.show {
@@ -172,15 +177,18 @@
             border-left: 4px solid var(--primary);
             padding: 10px 12px;
             border-radius: 10px;
-            box-shadow: 0 8px 32px rgba(0,0,0,.4)
+            /* Shadow nhẹ và sáng hơn */
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+            border: 1px solid var(--border); /* Thêm viền nhẹ */
         }
 
         .empty {
-            border: 1px dashed #334155;
+            border: 1px dashed #adb5bd; /* Viền dashed xám vừa */
             border-radius: 14px;
             padding: 24px;
             text-align: center;
-            color: var(--muted)
+            color: var(--muted);
+            background: rgba(0,0,0,.02); /* Nền siêu nhạt */
         }
     </style>
 </head>
@@ -296,7 +304,7 @@
                     const editBtn = document.createElement('button');
                     editBtn.className = 'mini';
                     editBtn.textContent = 'Edit';
-                    editBtn.onclick = () => edit(p.id);
+                    editBtn.onclick = () => { window.location.href = `edit.html?id=${p.id}`; };
 
                     const delBtn = document.createElement('button');
                     delBtn.className = 'mini';
@@ -359,12 +367,12 @@
                 }
             };
 
-            async function edit(id) {
-                const r = await fetch(`${api}/${id}`);
-                if (!r.ok) { toast('Cannot load post'); return; }
-                const p = await r.json();
-                showForm(true, p);
-            }
+            //async function edit(id) {
+            //    const r = await fetch(`${api}/${id}`);
+            //    if (!r.ok) { toast('Cannot load post'); return; }
+            //    const p = await r.json();
+            //    showForm(true, p);
+            //}
 
             async function remove(id) {
                 if (!confirm('Delete this post?')) return;

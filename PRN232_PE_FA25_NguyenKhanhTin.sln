@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.35906.104
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PRN232_PE_FA25_NguyenKhanhTin", "PRN232_PE_SU25_NguyenKhanhTin\PRN232_PE_FA25_NguyenKhanhTin.csproj", "{BF0E125A-BF0C-4612-A94E-0C530505E7A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PRN232_PE_FA25_NguyenKhanhTin", "PRN232_PE_FA25_NguyenKhanhTin\PRN232_PE_FA25_NguyenKhanhTin.csproj", "{BF0E125A-BF0C-4612-A94E-0C530505E7A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

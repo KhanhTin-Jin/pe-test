@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Post</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f9fafb;
+            --surface: #ffffff;
+            --primary: #007bff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: rgba(0,123,255,.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: Poppins,system-ui,Arial;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            background-image: radial-gradient(1200px 600px at 5% 5%,rgba(0,123,255,.1),transparent);
+        }
+
+        .container {
+            max-width: 980px;
+            margin: auto
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 18px;
+            font-weight: 600
+        }
+
+            h1 span {
+                color: var(--primary);
+                font-weight: 300
+            }
+
+        input, select, textarea, button {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: .2s;
+        }
+
+            input:focus, select:focus, textarea:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 12px var(--shadow)
+            }
+
+        button {
+            cursor: pointer;
+            border-color: var(--primary);
+            color: var(--primary);
+            background: transparent;
+            font-weight: 600
+        }
+
+            button:hover {
+                background: var(--primary);
+                color: #ffffff;
+                box-shadow: 0 0 16px var(--shadow)
+            }
+
+        .muted {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .form {
+            background: var(--surface);
+            border: 1px dashed #adb5bd;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.05);
+        }
+
+            .form.show {
+                display: block
+            }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px
+        }
+
+        #toast {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50
+        }
+
+        .toast {
+            background: var(--surface);
+            border-left: 4px solid var(--primary);
+            padding: 10px 12px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit <span>Post</span></h1>
+
+        <a href="index.html" style="display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-weight: 600;">
+            &larr; Back to List
+        </a>
+
+        <div id="form" class="form show">
+            <h3 id="formTitle" style="margin-bottom:10px;color:var(--primary)">Loading...</h3>
+            <input type="hidden" id="postId" />
+            <div class="row">
+                <input id="name" placeholder="Name *" style="flex:1" required />
+                <input id="imageUrl" placeholder="Image URL (optional)" style="flex:1" />
+            </div>
+            <p></p>
+            <textarea id="description" rows="4" placeholder="Description *" style="width:100%" required></textarea>
+            <div class="actions">
+                <button id="save">Save Changes</button>
+                <button id="cancel" type="button">Cancel</button>
+            </div>
+            <p class="muted" style="margin-top:6px">(*) Required</p>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        (() => {
+            // === CONFIG ===
+            const api = '/api/Posts';
+            const listPage = 'index.html'; // Tên file trang chủ
+
+            // === ELEMENTS ===
+            const formTitle = document.getElementById('formTitle');
+            const saveBtn = document.getElementById('save');
+            const cancelBtn = document.getElementById('cancel');
+            const postId = document.getElementById('postId');
+            const nameEl = document.getElementById('name');
+            const descEl = document.getElementById('description');
+            const imgEl = document.getElementById('imageUrl');
+
+            // === TOAST ===
+            const toast = (msg) => {
+                const box = document.getElementById('toast');
+                const t = document.createElement('div');
+                t.className = 'toast';
+                t.textContent = msg;
+                box.appendChild(t);
+                setTimeout(() => t.remove(), 3500);
+            };
+
+            // === LOGIC CỦA TRANG EDIT ===
+
+            // 1. Lấy ID từ URL
+            const params = new URLSearchParams(window.location.search);
+            const currentId = params.get('id');
+            if (!currentId) {
+                toast('Invalid Post ID.');
+                setTimeout(() => window.location.href = listPage, 2000);
+            }
+
+            // 2. Tải dữ liệu của post cần sửa
+            async function loadPost() {
+                try {
+                    const r = await fetch(`${api}/${currentId}`);
+                    if (!r.ok) { throw new Error('Cannot load post'); }
+                    const p = await r.json();
+
+                    // 3. Điền vào form
+                    formTitle.textContent = `Edit Post: ${p.name}`;
+                    postId.value = p.id;
+                    nameEl.value = p.name;
+                    descEl.value = p.description;
+                    imgEl.value = p.imageUrl ?? '';
+                    nameEl.focus();
+                } catch (err) {
+                    toast(err.message);
+                    setTimeout(() => window.location.href = listPage, 2000);
+                }
+            }
+
+            // 4. Xử lý nút Save
+            saveBtn.onclick = async () => {
+                const payload = {
+                    name: nameEl.value.trim(),
+                    description: descEl.value.trim(),
+                    imageUrl: imgEl.value.trim()
+                };
+                if (!payload.name || !payload.description) {
+                    toast('Name & Description are required.'); return;
+                }
+
+                const res = await fetch(`${api}/${currentId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: +currentId, ...payload })
+                });
+
+                if (!res.ok) { toast('Update failed'); return; }
+
+                toast('Updated successfully! Redirecting...');
+
+                // 5. Quay về trang danh sách sau khi lưu
+                setTimeout(() => window.location.href = listPage, 1500);
+            };
+
+            // 6. Xử lý nút Cancel (vẫn giữ logic cũ)
+            cancelBtn.onclick = () => {
+                if (confirm('Discard changes and go back?')) {
+                    window.location.href = listPage;
+                }
+            };
+
+            // Chạy khi tải trang
+            loadPost();
+        })();
+    </script>
+</body>
+</html>
